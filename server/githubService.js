@@ -56,6 +56,7 @@ export async function getUserWithRepos(username) {
     repos: repos.map((repo) => ({
       id: repo.id,
       name: repo.name,
+      html_url: repo.html_url,
       description: repo.description,
       language: repo.language,
       stargazers_count: repo.stargazers_count,

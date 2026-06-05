@@ -173,7 +173,16 @@ function App() {
               {sortedRepos.map((repo) => (
                 <li key={repo.id} className="repo-card">
                   <div className="repo-top">
-                    <h4>{repo.name}</h4>
+                    <h4>
+                      <a
+                        href={repo.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="repo-link"
+                      >
+                        {repo.name}
+                      </a>
+                    </h4>
                     <span className="repo-stars">
                       {formatCount(repo.stargazers_count)} ★
                     </span>

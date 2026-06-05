@@ -319,10 +319,19 @@
 
 .repo-top h4 {
   margin: 0;
-  color: var(--accent);
   font-size: 1rem;
   font-weight: 600;
   word-break: break-word;
+}
+
+.repo-link {
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.repo-link:hover {
+  text-decoration: underline;
 }
 
 .repo-stars {
