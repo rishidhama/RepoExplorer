@@ -45,7 +45,10 @@ function App() {
     setRepos([])
 
     try {
-      const response = await fetch(`/api/users/${encodeURIComponent(username)}`)
+      const apiBase = import.meta.env.VITE_API_URL || ''
+      const response = await fetch(
+        `${apiBase}/api/users/${encodeURIComponent(username)}`
+      )
       const data = await response.json()
 
       if (!response.ok) {
