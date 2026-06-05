@@ -25,6 +25,30 @@ function formatDate(dateString) {
   })
 }
 
+function formatCount(num) {
+  return num.toLocaleString()
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="skeleton-block" aria-hidden="true">
+      <div className="skeleton-profile">
+        <div className="skeleton-circle" />
+        <div className="skeleton-lines">
+          <div className="skeleton-line w40" />
+          <div className="skeleton-line w60" />
+          <div className="skeleton-line w80" />
+        </div>
+      </div>
+      <div className="skeleton-repos">
+        <div className="skeleton-card" />
+        <div className="skeleton-card" />
+        <div className="skeleton-card" />
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [query, setQuery] = useState('')
   const [user, setUser] = useState(null)
@@ -73,43 +97,53 @@ function App() {
         <p>Look up a GitHub user and browse their public repos.</p>
       </header>
 
-      <main className="main">
+      <main>
         <form className="search-form" onSubmit={handleSearch}>
           <input
             type="text"
-            placeholder="GitHub username"
+            placeholder="Enter a GitHub username"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            aria-label="GitHub username"
           />
           <button type="submit" disabled={loading}>
-            Search
+            {loading ? 'Searching…' : 'Search'}
           </button>
         </form>
 
-        {loading && <p className="status">Loading...</p>}
+        {loading && <LoadingSkeleton />}
 
-        {error && <p className="error">{error}</p>}
+        {error && (
+          <div className="feedback" role="alert">
+            <div className="error-box">
+              <div>
+                <strong>Could not load profile</strong>
+                {error}
+              </div>
+            </div>
+          </div>
+        )}
 
-        {user && (
+        {!loading && user && (
           <section className="profile">
             <img src={user.avatar_url} alt="" className="avatar" />
-            <div>
+            <div className="profile-body">
               <h2>{user.name || user.login}</h2>
               <p className="username">@{user.login}</p>
               {user.bio && <p className="bio">{user.bio}</p>}
               <ul className="stats">
-                <li>{user.followers} followers</li>
-                <li>{user.following} following</li>
-                <li>{user.public_repos} repos</li>
+                <li><span>{formatCount(user.followers)}</span> followers</li>
+                <li><span>{formatCount(user.following)}</span> following</li>
+                <li><span>{formatCount(user.public_repos)}</span> repos</li>
               </ul>
             </div>
           </section>
         )}
 
-        {user && repos.length > 0 && (
+        {!loading && user && repos.length > 0 && (
           <section className="repos">
             <div className="repos-header">
-              <h3>Repositories</h3>
+              <h3>Repositories ({repos.length})</h3>
               <div className="sort-controls">
                 <button
                   type="button"
@@ -140,13 +174,20 @@ function App() {
                 <li key={repo.id} className="repo-card">
                   <div className="repo-top">
                     <h4>{repo.name}</h4>
-                    <span>{repo.stargazers_count} stars</span>
+                    <span className="repo-stars">
+                      {formatCount(repo.stargazers_count)} ★
+                    </span>
                   </div>
                   {repo.description && (
                     <p className="repo-desc">{repo.description}</p>
                   )}
                   <div className="repo-meta">
-                    {repo.language && <span>{repo.language}</span>}
+                    {repo.language && (
+                      <span className="language">
+                        <span className="language-dot" />
+                        {repo.language}
+                      </span>
+                    )}
                     <span>Updated {formatDate(repo.updated_at)}</span>
                   </div>
                 </li>
@@ -155,8 +196,8 @@ function App() {
           </section>
         )}
 
-        {user && repos.length === 0 && !loading && (
-          <p className="status">No public repositories found.</p>
+        {!loading && user && repos.length === 0 && (
+          <p className="empty-state">No public repositories found for this user.</p>
         )}
       </main>
     </div>
