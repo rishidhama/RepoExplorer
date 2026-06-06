@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
+import { get as getCached, set as setCache } from './cache.js';
 import { getUserWithRepos } from './githubService.js';
 
 const app = express();
@@ -14,8 +15,17 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/api/users/:username', async (req, res) => {
+  const { username } = req.params;
+  const cacheKey = username.toLowerCase();
+
+  const cached = getCached(cacheKey);
+  if (cached) {
+    return res.json(cached);
+  }
+
   try {
-    const data = await getUserWithRepos(req.params.username);
+    const data = await getUserWithRepos(username);
+    setCache(cacheKey, data);
     res.json(data);
   } catch (err) {
     const status = err.status || 500;
