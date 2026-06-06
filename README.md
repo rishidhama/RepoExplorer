@@ -7,6 +7,7 @@ A small full-stack app where you enter a GitHub username and see that user's pub
 **Live demo**
 
 - Deployed Link: `https://repo-explorer-nine.vercel.app/`
+- Backend API: `https://repoexplorer-oxco.onrender.com`
 
 ---
 
