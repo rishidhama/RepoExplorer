@@ -37,11 +37,34 @@ async function fetchGithub(url) {
   return response.json();
 }
 
+function mapRepo(repo) {
+  return {
+    id: repo.id,
+    name: repo.name,
+    html_url: repo.html_url,
+    description: repo.description,
+    language: repo.language,
+    stargazers_count: repo.stargazers_count,
+    updated_at: repo.updated_at,
+    open_issues_count: repo.open_issues_count,
+    default_branch: repo.default_branch,
+  };
+}
+
+export async function getRepos(username, page = 1) {
+  const repos = await fetchGithub(
+    `${GITHUB_API}/users/${username}/repos?per_page=30&page=${page}&sort=updated`
+  );
+
+  return {
+    repos: repos.map(mapRepo),
+    hasMore: repos.length === 30,
+  };
+}
+
 export async function getUserWithRepos(username) {
   const user = await fetchGithub(`${GITHUB_API}/users/${username}`);
-  const repos = await fetchGithub(
-    `${GITHUB_API}/users/${username}/repos?per_page=30&page=1&sort=updated`
-  );
+  const { repos, hasMore } = await getRepos(username, 1);
 
   return {
     user: {
@@ -53,16 +76,7 @@ export async function getUserWithRepos(username) {
       following: user.following,
       public_repos: user.public_repos,
     },
-    repos: repos.map((repo) => ({
-      id: repo.id,
-      name: repo.name,
-      html_url: repo.html_url,
-      description: repo.description,
-      language: repo.language,
-      stargazers_count: repo.stargazers_count,
-      updated_at: repo.updated_at,
-      open_issues_count: repo.open_issues_count,
-      default_branch: repo.default_branch,
-    })),
+    repos,
+    hasMore,
   };
 }
