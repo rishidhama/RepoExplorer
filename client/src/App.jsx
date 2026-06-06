@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { getLanguageColor } from './languageColors.js'
 import './App.css'
 
 function sortRepos(repos, sortBy) {
@@ -60,6 +61,7 @@ function App() {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(false)
   const [expandedRepoId, setExpandedRepoId] = useState(null)
+  const [repoLanguages, setRepoLanguages] = useState({})
 
   async function handleSearch(event) {
     event.preventDefault()
@@ -74,6 +76,7 @@ function App() {
     setPage(1)
     setHasMore(false)
     setExpandedRepoId(null)
+    setRepoLanguages({})
 
     try {
       const apiBase = import.meta.env.VITE_API_URL || ''
@@ -125,8 +128,48 @@ function App() {
     }
   }
 
-  function toggleRepoDetails(repoId) {
-    setExpandedRepoId((current) => (current === repoId ? null : repoId))
+  async function fetchRepoLanguages(owner, repoName, repoId) {
+    setRepoLanguages((prev) => ({
+      ...prev,
+      [repoId]: { loading: true, languages: [] },
+    }))
+
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || ''
+      const response = await fetch(
+        `${apiBase}/api/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/languages`
+      )
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to load languages')
+      }
+
+      setRepoLanguages((prev) => ({
+        ...prev,
+        [repoId]: { loading: false, languages: data.languages },
+      }))
+    } catch {
+      setRepoLanguages((prev) => ({
+        ...prev,
+        [repoId]: { loading: false, languages: [], error: true },
+      }))
+    }
+  }
+
+  function toggleRepoDetails(repo) {
+    const isClosing = expandedRepoId === repo.id
+
+    if (isClosing) {
+      setExpandedRepoId(null)
+      return
+    }
+
+    setExpandedRepoId(repo.id)
+
+    if (!repoLanguages[repo.id]) {
+      fetchRepoLanguages(user.login, repo.name, repo.id)
+    }
   }
 
   const sortedRepos = sortRepos(repos, sortBy)
@@ -217,6 +260,7 @@ function App() {
             <ul className="repo-list">
               {sortedRepos.map((repo) => {
                 const isExpanded = expandedRepoId === repo.id
+                const langData = repoLanguages[repo.id]
 
                 return (
                 <li key={repo.id} className={`repo-card${isExpanded ? ' expanded' : ''}`}>
@@ -239,33 +283,65 @@ function App() {
                     <p className="repo-desc">{repo.description}</p>
                   )}
                   <div className="repo-meta">
-                    {repo.language && (
-                      <span className="language">
-                        <span className="language-dot" />
-                        {repo.language}
-                      </span>
-                    )}
+                    <span className="language">
+                      {repo.language ? (
+                        <>
+                          <span
+                            className="language-dot"
+                            style={{ background: getLanguageColor(repo.language) }}
+                          />
+                          {repo.language}
+                        </>
+                      ) : (
+                        'No language detected'
+                      )}
+                    </span>
                     <span>Updated {formatDate(repo.updated_at)}</span>
                   </div>
                   <button
                     type="button"
                     className="repo-toggle"
-                    onClick={() => toggleRepoDetails(repo.id)}
+                    onClick={() => toggleRepoDetails(repo)}
                     aria-expanded={isExpanded}
                   >
                     {isExpanded ? 'Hide details' : 'Show details'}
                   </button>
                   {isExpanded && (
-                    <dl className="repo-details">
-                      <div>
-                        <dt>Open issues</dt>
-                        <dd>{formatCount(repo.open_issues_count)}</dd>
+                    <div className="repo-expanded">
+                      <dl className="repo-details">
+                        <div>
+                          <dt>Open issues</dt>
+                          <dd>{formatCount(repo.open_issues_count)}</dd>
+                        </div>
+                        <div>
+                          <dt>Default branch</dt>
+                          <dd>{repo.default_branch}</dd>
+                        </div>
+                      </dl>
+                      <div className="repo-languages">
+                        <h5>Languages</h5>
+                        {langData?.loading && (
+                          <p className="lang-status">Loading languages…</p>
+                        )}
+                        {!langData?.loading && langData?.languages?.length > 0 && (
+                          <ul className="lang-list">
+                            {langData.languages.map((lang) => (
+                              <li key={lang.name}>
+                                <span
+                                  className="language-dot"
+                                  style={{ background: getLanguageColor(lang.name) }}
+                                />
+                                <span className="lang-name">{lang.name}</span>
+                                <span className="lang-percent">{lang.percent}%</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {!langData?.loading && langData?.languages?.length === 0 && (
+                          <p className="lang-status">No language data available.</p>
+                        )}
                       </div>
-                      <div>
-                        <dt>Default branch</dt>
-                        <dd>{repo.default_branch}</dd>
-                      </div>
-                    </dl>
+                    </div>
                   )}
                 </li>
                 )

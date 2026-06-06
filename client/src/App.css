@@ -373,7 +373,61 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #bf3989;
+  flex-shrink: 0;
+}
+
+.repo-expanded {
+  margin-top: 14px;
+}
+
+.repo-languages {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+.repo-languages h5 {
+  margin: 0 0 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.lang-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lang-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 0.875rem;
+}
+
+.lang-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.lang-name {
+  flex: 1;
+  color: var(--text);
+}
+
+.lang-percent {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.lang-status {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }
 
 .repo-card.expanded {

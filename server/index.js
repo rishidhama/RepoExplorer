@@ -2,7 +2,7 @@ import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import { get as getCached, set as setCache } from './cache.js';
-import { getRepos, getUserWithRepos } from './githubService.js';
+import { getRepos, getRepoLanguages, getUserWithRepos } from './githubService.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -58,6 +58,27 @@ app.get('/api/users/:username/repos', async (req, res) => {
     res.json(data);
   } catch (err) {
     handleError(err, res, username);
+  }
+});
+
+app.get('/api/repos/:owner/:repo/languages', async (req, res) => {
+  const { owner, repo } = req.params;
+  const cacheKey = `${owner.toLowerCase()}/${repo.toLowerCase()}:languages`;
+
+  const cached = getCached(cacheKey);
+  if (cached) {
+    return res.json(cached);
+  }
+
+  try {
+    const data = await getRepoLanguages(owner, repo);
+    setCache(cacheKey, data);
+    res.json(data);
+  } catch (err) {
+    const status = err.status || 500;
+    res.status(status).json({
+      message: err.message || 'Something went wrong',
+    });
   }
 });
 

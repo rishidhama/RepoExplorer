@@ -51,6 +51,20 @@ function mapRepo(repo) {
   };
 }
 
+export async function getRepoLanguages(owner, repo) {
+  const data = await fetchGithub(`${GITHUB_API}/repos/${owner}/${repo}/languages`);
+
+  const total = Object.values(data).reduce((sum, bytes) => sum + bytes, 0);
+  const languages = Object.entries(data)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, bytes]) => ({
+      name,
+      percent: total ? Math.round((bytes / total) * 100) : 0,
+    }));
+
+  return { languages };
+}
+
 export async function getRepos(username, page = 1) {
   const repos = await fetchGithub(
     `${GITHUB_API}/users/${username}/repos?per_page=30&page=${page}&sort=updated`
