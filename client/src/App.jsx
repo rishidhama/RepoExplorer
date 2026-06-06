@@ -54,8 +54,11 @@ function App() {
   const [user, setUser] = useState(null)
   const [repos, setRepos] = useState([])
   const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const [sortBy, setSortBy] = useState('stars')
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
 
   async function handleSearch(event) {
     event.preventDefault()
@@ -67,6 +70,8 @@ function App() {
     setError('')
     setUser(null)
     setRepos([])
+    setPage(1)
+    setHasMore(false)
 
     try {
       const apiBase = import.meta.env.VITE_API_URL || ''
@@ -81,6 +86,8 @@ function App() {
 
       setUser(data.user)
       setRepos(data.repos)
+      setHasMore(data.hasMore)
+      setPage(1)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -88,7 +95,39 @@ function App() {
     }
   }
 
+  async function handleLoadMore() {
+    if (!user || loadingMore) return
+
+    const nextPage = page + 1
+    setLoadingMore(true)
+    setError('')
+
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || ''
+      const response = await fetch(
+        `${apiBase}/api/users/${encodeURIComponent(user.login)}/repos?page=${nextPage}`
+      )
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Something went wrong')
+      }
+
+      setRepos((prev) => [...prev, ...data.repos])
+      setPage(nextPage)
+      setHasMore(data.hasMore)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
   const sortedRepos = sortRepos(repos, sortBy)
+  const repoCountLabel =
+    user && user.public_repos > repos.length
+      ? `${repos.length} of ${formatCount(user.public_repos)}`
+      : `${repos.length}`
 
   return (
     <div className="app">
@@ -143,7 +182,7 @@ function App() {
         {!loading && user && repos.length > 0 && (
           <section className="repos">
             <div className="repos-header">
-              <h3>Repositories ({repos.length})</h3>
+              <h3>Repositories ({repoCountLabel})</h3>
               <div className="sort-controls">
                 <button
                   type="button"
@@ -202,6 +241,17 @@ function App() {
                 </li>
               ))}
             </ul>
+
+            {hasMore && (
+              <button
+                type="button"
+                className="load-more"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+              >
+                {loadingMore ? 'Loading…' : 'Load more'}
+              </button>
+            )}
           </section>
         )}
 
