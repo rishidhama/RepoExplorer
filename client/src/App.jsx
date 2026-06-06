@@ -59,6 +59,7 @@ function App() {
   const [sortBy, setSortBy] = useState('stars')
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(false)
+  const [expandedRepoId, setExpandedRepoId] = useState(null)
 
   async function handleSearch(event) {
     event.preventDefault()
@@ -72,6 +73,7 @@ function App() {
     setRepos([])
     setPage(1)
     setHasMore(false)
+    setExpandedRepoId(null)
 
     try {
       const apiBase = import.meta.env.VITE_API_URL || ''
@@ -121,6 +123,10 @@ function App() {
     } finally {
       setLoadingMore(false)
     }
+  }
+
+  function toggleRepoDetails(repoId) {
+    setExpandedRepoId((current) => (current === repoId ? null : repoId))
   }
 
   const sortedRepos = sortRepos(repos, sortBy)
@@ -209,8 +215,11 @@ function App() {
             </div>
 
             <ul className="repo-list">
-              {sortedRepos.map((repo) => (
-                <li key={repo.id} className="repo-card">
+              {sortedRepos.map((repo) => {
+                const isExpanded = expandedRepoId === repo.id
+
+                return (
+                <li key={repo.id} className={`repo-card${isExpanded ? ' expanded' : ''}`}>
                   <div className="repo-top">
                     <h4>
                       <a
@@ -238,8 +247,29 @@ function App() {
                     )}
                     <span>Updated {formatDate(repo.updated_at)}</span>
                   </div>
+                  <button
+                    type="button"
+                    className="repo-toggle"
+                    onClick={() => toggleRepoDetails(repo.id)}
+                    aria-expanded={isExpanded}
+                  >
+                    {isExpanded ? 'Hide details' : 'Show details'}
+                  </button>
+                  {isExpanded && (
+                    <dl className="repo-details">
+                      <div>
+                        <dt>Open issues</dt>
+                        <dd>{formatCount(repo.open_issues_count)}</dd>
+                      </div>
+                      <div>
+                        <dt>Default branch</dt>
+                        <dd>{repo.default_branch}</dd>
+                      </div>
+                    </dl>
+                  )}
                 </li>
-              ))}
+                )
+              })}
             </ul>
 
             {hasMore && (

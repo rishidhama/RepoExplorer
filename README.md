@@ -170,4 +170,4 @@ RepoExplorer/
 
 ## Repo
 
-https://github.com/rishidhama/RepoExplorer
+[GitHub Repository](https://github.com/rishidhama/RepoExplorer)
