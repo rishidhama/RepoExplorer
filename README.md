@@ -117,7 +117,8 @@ Fetches a GitHub user profile and their first page of public repos (up to 30).
       "open_issues_count": 5,
       "default_branch": "main"
     }
-  ]
+  ],
+  "hasMore": false
 }
 ```
 
@@ -135,19 +136,59 @@ Fetches a GitHub user profile and their first page of public repos (up to 30).
 
 ---
 
+### `GET /api/users/:username/repos?page=2`
+
+Fetches additional pages of public repos (30 per page).
+
+**Query params**
+
+| Name | Description |
+|------|-------------|
+| page | Page number (default: 1) |
+
+**Success — `200`**
+
+```json
+{
+  "repos": [ ... ],
+  "hasMore": true
+}
+```
+
+---
+
+### `GET /api/repos/:owner/:repo/languages`
+
+Fetches the full language breakdown for a single repo.
+
+**Success — `200`**
+
+```json
+{
+  "languages": [
+    { "name": "JavaScript", "percent": 62 },
+    { "name": "CSS", "percent": 28 }
+  ]
+}
+```
+
+---
+
 ## Project structure
 
 ```
 RepoExplorer/
-├── client/                 # React frontend
+├── client/
 │   ├── src/
-│   │   ├── App.jsx         # Search, profile, repo list, sorting
+│   │   ├── App.jsx           # Search, profile, repos, sorting, expand
 │   │   ├── App.css
+│   │   ├── languageColors.js # GitHub-style language colours
 │   │   └── main.jsx
-│   └── vite.config.js      # Dev proxy to backend
-├── server/                 # Express backend
-│   ├── index.js            # Routes and error handling
-│   ├── githubService.js    # GitHub API calls
+│   └── vite.config.js
+├── server/
+│   ├── index.js              # Routes, caching, error handling
+│   ├── githubService.js      # GitHub API calls
+│   ├── cache.js              # 60s in-memory cache
 │   └── .env.example
 └── README.md
 ```
@@ -158,13 +199,17 @@ RepoExplorer/
 
 - Search by GitHub username
 - Profile: avatar, name, bio, followers, following, repo count
-- Repo list: name, description, language, stars, last updated
+- Repo list: name, description, primary language, stars, last updated
 - Sort repos by stars, name, or last updated (client-side)
-- Repo names link out to GitHub
-- Loading skeletons, error states, basic responsive layout
+- Repo names link out to GitHub in a new tab
+- Load more pagination for users with 30+ repos
+- Expandable repo details: open issues, default branch, full language breakdown
+- Language colours match GitHub's usual palette
+- 60-second in-memory cache on the backend (per username / page / repo)
+- Loading skeletons, error states, responsive layout
 - 404 for invalid usernames
 - Rate limit and network errors surfaced to the user
-- Deployed frontend talking to deployed backend
+- Deployed on Vercel (frontend) and Render (backend)
 
 ---
 
