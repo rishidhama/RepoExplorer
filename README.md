@@ -1,7 +1,5 @@
 # RepoExplorer
 
-Exercise 3 — GitHub Repo Explorer, for the Studio Graphene Associate Software Engineer take-home.
-
 A small full-stack app where you enter a GitHub username and see that user's public profile plus their public repositories. The React frontend never calls GitHub directly; an Express backend proxies the requests so a token stays server-side and rate limits can be handled in one place.
 
 **Live demo**
